@@ -34,7 +34,7 @@ dependencies = [
 ui = ["streamlit>=1.49", "pandas>=2.0"]
 gemini = ["google-genai>=0.3"]
 transcripts = ["youtube-transcript-api>=0.6"]
-dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "streamlit>=1.49"]
 all = [
     "streamlit>=1.49",
     "pandas>=2.0",

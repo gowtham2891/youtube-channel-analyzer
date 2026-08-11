@@ -17,6 +17,7 @@ from .analytics import (
     performance_by_duration,
 )
 from .config import ConfigError, Settings, get_settings
+from .health import CheckResult, check_gemini, check_settings, check_youtube
 from .models import (
     Channel,
     ChannelReport,
@@ -40,6 +41,7 @@ __all__ = [
     "ChannelAnalysisPipeline",
     "ChannelReport",
     "ChannelStats",
+    "CheckResult",
     "ConfigError",
     "ContentInsights",
     "ProviderError",
@@ -47,6 +49,9 @@ __all__ = [
     "Transcript",
     "Video",
     "analyze_channel",
+    "check_gemini",
+    "check_settings",
+    "check_youtube",
     "compute_stats",
     "consistency_score",
     "duration_buckets",

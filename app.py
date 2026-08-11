@@ -15,7 +15,7 @@ import os
 
 import streamlit as st
 
-from yt_analyzer import __version__, get_settings
+from yt_analyzer import __version__
 from yt_analyzer.analytics import (
     consistency_score,
     duration_buckets,
@@ -23,7 +23,8 @@ from yt_analyzer.analytics import (
     outliers,
     performance_by_duration,
 )
-from yt_analyzer.config import ConfigError
+from yt_analyzer.config import ConfigError, Settings
+from yt_analyzer.health import check_settings
 from yt_analyzer.models import ChannelReport, format_duration
 from yt_analyzer.pipeline import ChannelAnalysisPipeline
 from yt_analyzer.providers.base import (
@@ -62,9 +63,70 @@ WEEKDAY_ORDER = [
     "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
 ]
 
+#: (Settings attribute, label, help text) for keys a visitor can supply.
+KEY_FIELDS = [
+    (
+        "youtube_api_key",
+        "YouTube Data API key",
+        "Required when Data source is `youtube`. Free from "
+        "console.cloud.google.com — enable *YouTube Data API v3*.",
+    ),
+    (
+        "gemini_api_key",
+        "Gemini API key",
+        "Required when Analyzer is `gemini`. Free from aistudio.google.com.",
+    ),
+]
 
-def build_settings():
-    settings = get_settings(refresh=True)
+
+def api_key_panel(settings: Settings) -> None:
+    """Let a visitor supply their own credentials for this session only.
+
+    Entered keys are applied to this session's `Settings` object and nothing
+    else. They are deliberately never written to `os.environ`, because a
+    deployed Streamlit app serves every visitor from one process — a key put
+    into the environment would leak into other people's sessions.
+    """
+    with st.expander("🔑 Use your own API keys", expanded=False):
+        st.caption(
+            "Keys stay in this browser session only. They are never written to "
+            "disk, never logged, and never shared with other visitors. "
+            "Close the tab and they're gone."
+        )
+
+        for attr, label, help_text in KEY_FIELDS:
+            entered = st.text_input(
+                label,
+                type="password",
+                key=f"user_key_{attr}",
+                help=help_text,
+                placeholder="paste your key here",
+            )
+            if entered and entered.strip():
+                setattr(settings, attr, entered.strip())
+
+        if st.button("Test connections", width="stretch"):
+            with st.spinner("Checking credentials…"):
+                st.session_state["health_checks"] = check_settings(settings)
+
+        for result in st.session_state.get("health_checks", []):
+            if result.ok:
+                st.success(f"**{result.provider}** — {result.message}")
+            else:
+                st.error(f"**{result.provider}** — {result.message}")
+
+        if not settings.is_mock:
+            st.caption(
+                "Switch the providers above to `youtube` / `gemini` to use "
+                "these keys."
+            )
+
+
+def build_settings() -> Settings:
+    # A fresh instance per script run: Streamlit Cloud serves every visitor
+    # from one process, so a shared settings object would let one session's
+    # configuration bleed into another's.
+    settings = Settings()
 
     with st.sidebar:
         st.title("📺 Channel Analyzer")
@@ -100,12 +162,17 @@ def build_settings():
             )
 
         st.divider()
+        api_key_panel(settings)
+
+        st.divider()
         if settings.is_mock:
             st.success("Mock mode — no credentials required.")
+        elif settings.source == "youtube" and not settings.youtube_api_key:
+            st.error("No YouTube API key — add one above or switch back to `mock`.")
+        elif settings.analyzer == "gemini" and not settings.gemini_api_key:
+            st.error("No Gemini key — add one above or switch back to `mock`.")
         else:
-            st.info("Live mode — reading credentials from .env")
-            if settings.source == "youtube" and not settings.youtube_api_key:
-                st.error("YOUTUBE_API_KEY is not set.")
+            st.info("Live mode — using the keys provided.")
 
     return settings
 

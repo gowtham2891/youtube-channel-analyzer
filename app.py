@@ -24,7 +24,7 @@ from yt_analyzer.analytics import (
     performance_by_duration,
 )
 from yt_analyzer.config import ConfigError, Settings
-from yt_analyzer.health import check_settings
+from yt_analyzer.health import check_settings, missing_credentials
 from yt_analyzer.models import ChannelReport, format_duration
 from yt_analyzer.pipeline import ChannelAnalysisPipeline
 from yt_analyzer.providers.base import (
@@ -87,7 +87,8 @@ def api_key_panel(settings: Settings) -> None:
     deployed Streamlit app serves every visitor from one process — a key put
     into the environment would leak into other people's sessions.
     """
-    with st.expander("🔑 Use your own API keys", expanded=False):
+    needs_key = bool(missing_credentials(settings))
+    with st.expander("🔑 Use your own API keys", expanded=needs_key):
         st.caption(
             "Keys stay in this browser session only. They are never written to "
             "disk, never logged, and never shared with other visitors. "
@@ -120,6 +121,33 @@ def api_key_panel(settings: Settings) -> None:
                 "Switch the providers above to `youtube` / `gemini` to use "
                 "these keys."
             )
+
+
+def credential_gate(settings) -> bool:
+    """Show what is missing and whether the app may run.
+
+    Returns True when the selected providers are ready. When something is
+    missing the user is told which key, which provider needs it, and where to
+    get it -- instead of a stack trace half way through a run.
+    """
+    missing = missing_credentials(settings)
+    if not missing:
+        return True
+
+    lines = []
+    for item in missing:
+        line = "- **{0}** \u2014 needed for {1}".format(item.label, item.needed_for)
+        if item.get_it_at:
+            line += "  \u00b7  get one at `{0}`".format(item.get_it_at)
+        lines.append(line)
+
+    st.warning(
+        "**Add an API key to continue.**\n\n"
+        + "\n".join(lines)
+        + "\n\nOpen **Use your own API keys** in the sidebar and paste it there, "
+        "or switch the provider back to `mock` to use the offline demo."
+    )
+    return False
 
 
 def build_settings() -> Settings:
@@ -165,12 +193,14 @@ def build_settings() -> Settings:
         api_key_panel(settings)
 
         st.divider()
+        gaps = missing_credentials(settings)
         if settings.is_mock:
             st.success("Mock mode — no credentials required.")
-        elif settings.source == "youtube" and not settings.youtube_api_key:
-            st.error("No YouTube API key — add one above or switch back to `mock`.")
-        elif settings.analyzer == "gemini" and not settings.gemini_api_key:
-            st.error("No Gemini key — add one above or switch back to `mock`.")
+        elif gaps:
+            st.error(
+                "Missing: " + ", ".join(item.env_var for item in gaps)
+                + ". Add it above, or switch back to `mock`."
+            )
         else:
             st.info("Live mode — using the keys provided.")
 
@@ -400,6 +430,9 @@ def main() -> None:
     if st.button("Analyze", type="primary", width="stretch"):
         if not identifier.strip():
             st.warning("Enter a channel first.")
+            return
+
+        if not credential_gate(settings):
             return
 
         log_area = st.empty()

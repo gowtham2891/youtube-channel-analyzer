@@ -17,7 +17,15 @@ from .analytics import (
     performance_by_duration,
 )
 from .config import ConfigError, Settings, get_settings
-from .health import CheckResult, check_gemini, check_settings, check_youtube
+from .health import (
+    CheckResult,
+    MissingCredential,
+    check_gemini,
+    check_settings,
+    check_youtube,
+    credentials_ready,
+    missing_credentials,
+)
 from .models import (
     Channel,
     ChannelReport,
@@ -44,6 +52,7 @@ __all__ = [
     "CheckResult",
     "ConfigError",
     "ContentInsights",
+    "MissingCredential",
     "ProviderError",
     "Settings",
     "Transcript",
@@ -54,8 +63,10 @@ __all__ = [
     "check_youtube",
     "compute_stats",
     "consistency_score",
+    "credentials_ready",
     "duration_buckets",
     "get_settings",
+    "missing_credentials",
     "monthly_upload_counts",
     "outliers",
     "performance_by_duration",

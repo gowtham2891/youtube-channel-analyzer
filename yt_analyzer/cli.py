@@ -20,7 +20,7 @@ from rich.table import Table
 from . import __version__
 from .analytics import consistency_score, duration_buckets, outliers, performance_by_duration
 from .config import ConfigError, get_settings
-from .health import check_settings
+from .health import check_settings, missing_credentials
 from .models import ChannelReport, format_duration
 from .pipeline import ChannelAnalysisPipeline
 from .providers.base import ProviderError, available_analyzers, available_sources
@@ -198,6 +198,30 @@ def _render_report(report: ChannelReport) -> None:
         )
 
 
+def _require_credentials(settings, command: str) -> None:
+    """Stop before the run when a selected provider has no key.
+
+    Exits 1 with the variable name and where to get it, rather than letting the
+    failure surface as a ConfigError part way through the pipeline.
+    """
+    gaps = missing_credentials(settings)
+    if not gaps:
+        return
+
+    console.print("[red]Missing credentials for this configuration:[/red]")
+    for item in gaps:
+        where = f" [dim]({item.get_it_at})[/dim]" if item.get_it_at else ""
+        console.print(
+            f"  {SYMBOLS['cross']} [bold]{item.env_var}[/bold] "
+            f"- needed for {item.needed_for}{where}"
+        )
+    console.print(
+        f"\nSet it in your .env file, then re-run [bold]{command} check[/bold] "
+        f"to verify. Or switch the provider back to 'mock' to run offline."
+    )
+    raise SystemExit(1)
+
+
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(__version__, prog_name="yt-analyzer")
 def cli() -> None:
@@ -239,6 +263,7 @@ def analyze(
         settings.fetch_transcripts = False
 
     console.print(f"[dim]{settings.describe()}[/dim]")
+    _require_credentials(settings, "yt-analyzer")
 
     try:
         pipeline = ChannelAnalysisPipeline(settings=settings, progress=_progress)

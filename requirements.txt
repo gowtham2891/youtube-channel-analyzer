@@ -1,0 +1,14 @@
+# Core runtime
+pydantic>=2.5
+httpx>=0.25
+python-dotenv>=1.0
+click>=8.1
+rich>=13.0
+
+# Streamlit UI (app.py)
+streamlit>=1.49
+pandas>=2.0
+
+# Optional providers -- uncomment what you use
+# google-genai>=0.3
+# youtube-transcript-api>=0.6

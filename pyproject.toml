@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "youtube-channel-analyzer"
+version = "1.0.0"
+description = "Analyzes YouTube channel transcripts and metadata with Gemini to surface content patterns, top topics and posting insights."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ganesh Gowtham Dupati", email = "gowthamdupati28@gmail.com" }]
+keywords = ["youtube", "gemini", "content-analysis", "transcripts", "analytics", "llm"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "pydantic>=2.5",
+    "httpx>=0.25",
+    "python-dotenv>=1.0",
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+ui = ["streamlit>=1.49", "pandas>=2.0"]
+gemini = ["google-genai>=0.3"]
+transcripts = ["youtube-transcript-api>=0.6"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+all = [
+    "streamlit>=1.49",
+    "pandas>=2.0",
+    "google-genai>=0.3",
+    "youtube-transcript-api>=0.6",
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/gowtham2891/youtube-channel-analyzer"
+Repository = "https://github.com/gowtham2891/youtube-channel-analyzer"
+Issues = "https://github.com/gowtham2891/youtube-channel-analyzer/issues"
+
+[project.scripts]
+yt-analyzer = "yt_analyzer.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["yt_analyzer*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = ["ignore::DeprecationWarning"]

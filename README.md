@@ -1,8 +1,11 @@
 # YouTube Channel Analyzer
 
+[![Live demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gowtham2891-yt-analyzer.streamlit.app)
 [![CI](https://github.com/gowtham2891/youtube-channel-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/gowtham2891/youtube-channel-analyzer/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+**▶ Try it live — [gowtham2891-yt-analyzer.streamlit.app](https://gowtham2891-yt-analyzer.streamlit.app)** · runs in mock mode, no credentials needed.
 
 Point it at a YouTube channel. It fetches the uploads and transcripts, computes
 what actually happened, and uses **Gemini only for the qualitative read** —
@@ -217,6 +220,33 @@ an explicit test that **a broken analyzer still returns complete statistics**.
 - [ ] Thumbnail analysis with a vision model
 - [ ] Comment sentiment sampling
 - [ ] Track a channel over time and diff the reports
+
+---
+
+## Deploy your own
+
+Ready for [Streamlit Community Cloud](https://share.streamlit.io): free, and it
+redeploys on every push to `main`.
+
+1. Sign in at [share.streamlit.io](https://share.streamlit.io) with GitHub.
+2. **Create app** → this repo, branch `main`, main file `app.py`.
+3. Under **Advanced settings**, choose Python **3.11**.
+4. Set the custom subdomain to `gowtham2891-yt-analyzer` so it matches the link above.
+5. Deploy — the first build takes a couple of minutes.
+
+No secrets are needed for the demo. To switch it to the live providers, open
+**Settings → Secrets** in the Streamlit dashboard and paste:
+
+```toml
+DATA_SOURCE = "youtube"
+ANALYZER = "gemini"
+YOUTUBE_API_KEY = "your-youtube-key"
+GEMINI_API_KEY = "your-gemini-key"
+```
+
+`app.py` copies those secrets into the environment before settings are resolved,
+so the exact same configuration works locally through `.env` and in the cloud
+through the dashboard — no code changes either way.
 
 ---
 

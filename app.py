@@ -11,6 +11,8 @@ table view beside it.
 
 from __future__ import annotations
 
+import os
+
 import streamlit as st
 
 from yt_analyzer import __version__, get_settings
@@ -33,6 +35,25 @@ from yt_analyzer.providers.base import (
 st.set_page_config(
     page_title="YouTube Channel Analyzer", page_icon="📺", layout="wide"
 )
+
+
+def _load_secrets_into_env() -> None:
+    """Bridge Streamlit Cloud secrets into the environment.
+
+    Configuration is read from environment variables, so secrets added in the
+    Streamlit Cloud dashboard are copied across before settings are resolved.
+    Existing environment variables win, so a local .env still takes precedence.
+    """
+    try:
+        items = list(st.secrets.items())
+    except Exception:  # noqa: BLE001 - no secrets file is the normal local case
+        return
+    for key, value in items:
+        if isinstance(value, (str, int, float, bool)) and key not in os.environ:
+            os.environ[key] = str(value)
+
+
+_load_secrets_into_env()
 
 #: Single accent hue, validated for contrast against both chart surfaces.
 ACCENT = "#2E6BE6"

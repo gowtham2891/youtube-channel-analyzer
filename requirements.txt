@@ -12,3 +12,6 @@ pandas>=2.0
 # Optional providers -- uncomment what you use
 # google-genai>=0.3
 # youtube-transcript-api>=0.6
+
+# Deployment note: Streamlit Community Cloud rebuilds the environment when
+# this file changes, which also forces a clean checkout of the repo.
